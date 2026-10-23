@@ -462,5 +462,64 @@ describe('台灣夜市料理王：Phaser 場景、服務、音效與 LocalStorag
     expect(mobilePortraitLayout.customersRegion.y).toBeLessThan(
       mobilePortraitLayout.workbenchRegion.y,
     );
+
+    // 驗證 NightMarketScene 在 390×844 與 720×1280 直式視窗下實際更新 Phaser 畫布尺寸與舞台角色座標
+    const harness = new VirtualControllerHarness();
+    const mockCanvasEl = {
+      width: DESKTOP_LOGICAL_WIDTH,
+      height: DESKTOP_LOGICAL_HEIGHT,
+      dataset: {} as Record<string, string>,
+      style: {} as Record<string, string>,
+      parentElement: null as unknown,
+    };
+    const mockStageEl = {
+      className: 'nm-phaser-stage',
+      dataset: {} as Record<string, string>,
+      style: {
+        setProperty(key: string, value: string) {
+          (this as Record<string, unknown>)[key] = value;
+        },
+      } as unknown as Record<string, string>,
+      parentElement: null as unknown,
+      querySelector(selector: string) {
+        return selector === 'canvas' ? mockCanvasEl : null;
+      },
+      appendChild(child: unknown) {
+        (child as { parentElement: unknown }).parentElement = mockStageEl;
+      },
+      remove() {
+        this.parentElement = null;
+      },
+    };
+    mockCanvasEl.parentElement = mockStageEl;
+    harness.scene.attachStageContainer(mockStageEl as unknown as HTMLElement);
+
+    const resized390 = harness.scene.resizeViewport(390, 844);
+    expect(resized390.orientation).toBe('portrait');
+    expect(mockCanvasEl.width).toBe(MOBILE_PORTRAIT_LOGICAL_WIDTH);
+    expect(mockCanvasEl.height).toBe(MOBILE_PORTRAIT_LOGICAL_HEIGHT);
+    expect(mockCanvasEl.dataset.orientation).toBe('portrait');
+    expect(mockStageEl.dataset.logicalWidth).toBe('720');
+    expect(mockStageEl.dataset.logicalHeight).toBe('1280');
+
+    const stallSprite = harness.createdSprites.find((s) => s.textureKey === 'stall');
+    const bossSprite = harness.createdSprites.find((s) => s.textureKey === 'boss');
+    expect(stallSprite?.x).toBe(mobilePortraitLayout.stageLayout.stall.x);
+    expect(stallSprite?.y).toBe(mobilePortraitLayout.stageLayout.stall.y);
+    expect(stallSprite?.scale).toBe(mobilePortraitLayout.stageLayout.stall.scale);
+    expect(bossSprite?.x).toBe(mobilePortraitLayout.stageLayout.boss.x);
+    expect(bossSprite?.y).toBe(mobilePortraitLayout.stageLayout.boss.y);
+
+    const resized720 = harness.scene.resizeViewport(720, 1280);
+    expect(resized720.orientation).toBe('portrait');
+    expect(resized720.logicalWidth).toBe(720);
+    expect(resized720.logicalHeight).toBe(1280);
+
+    // 驗證 CSS 樣式表內操作按鈕與觸控目標維持 >= 48 CSS px
+    const cssText = readFileSync(resolve(process.cwd(), 'src/styles/game.css'), 'utf-8');
+    expect(cssText).toContain(
+      '.nm-quiet, .nm-action, .nm-choice { min-width: 48px; min-height: 48px;',
+    );
+    expect(cssText).toContain('.nm-deliver { min-height: 48px;');
   });
 });

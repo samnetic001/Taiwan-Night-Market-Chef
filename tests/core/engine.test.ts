@@ -678,12 +678,34 @@ describe('台灣夜市料理王：珍珠奶茶純函式事件核心', () => {
     expect(desktop.logicalWidth).toBe(DESKTOP_LOGICAL_WIDTH);
     expect(desktop.logicalHeight).toBe(DESKTOP_LOGICAL_HEIGHT);
     expect(desktop.minTouchTargetCssPx).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET_CSS_PX);
+    expect(desktop.stageLayout.camera.viewportWidth).toBe(1280);
+    expect(desktop.stageLayout.camera.viewportHeight).toBe(720);
 
     const mobile = computeResponsiveLayout(390, 844);
+    const mobileLogical = computeResponsiveLayout(720, 1280);
     expect(mobile.orientation).toBe('portrait');
+    expect(mobileLogical.orientation).toBe('portrait');
+    expect(mobile.logicalWidth).toBe(720);
+    expect(mobile.logicalHeight).toBe(1280);
     expect(mobile.minTouchTargetCssPx).toBeGreaterThanOrEqual(48);
     expect(mobile.ordersRegion.y).toBeLessThan(mobile.customersRegion.y);
     expect(mobile.customersRegion.y).toBeLessThan(mobile.workbenchRegion.y);
+
+    // 驗證直式舞台物件（攤位、老闆、預覽杯、三位客人）皆位於 customersRegion 範圍內且不超出 720×1280 畫布
+    const region = mobile.customersRegion;
+    const regionRight = region.x + region.width;
+    const regionBottom = region.y + region.height;
+    for (const point of [
+      mobile.stageLayout.stall,
+      mobile.stageLayout.boss,
+      mobile.stageLayout.previewDrink,
+      ...mobile.stageLayout.customerSlots,
+    ]) {
+      expect(point.x).toBeGreaterThanOrEqual(region.x);
+      expect(point.x).toBeLessThanOrEqual(regionRight);
+      expect(point.y).toBeGreaterThanOrEqual(region.y);
+      expect(point.y).toBeLessThanOrEqual(regionBottom);
+    }
 
     const storage = new MemoryStorage();
     expect(loadAudioEnabled(storage)).toBe(true);

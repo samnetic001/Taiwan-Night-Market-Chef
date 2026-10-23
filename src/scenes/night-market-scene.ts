@@ -30,6 +30,8 @@ export interface NightMarketSceneDeps {
   readonly assets: AssetRegistry;
   readonly session: GameSession;
   readonly now?: () => number;
+  readonly viewportWidth?: number;
+  readonly viewportHeight?: number;
   readonly onReady?: (scene: NightMarketScene) => void;
 }
 
@@ -55,8 +57,16 @@ export class NightMarketScene extends Phaser.Scene {
   constructor(deps: NightMarketSceneDeps) {
     super(NIGHT_MARKET_SCENE_KEY);
     this.deps = deps;
-    const width = typeof window !== 'undefined' ? window.innerWidth : DESKTOP_LOGICAL_WIDTH;
-    const height = typeof window !== 'undefined' ? window.innerHeight : DESKTOP_LOGICAL_HEIGHT;
+    const width =
+      deps.viewportWidth ??
+      (typeof window !== 'undefined' && window.innerWidth > 0
+        ? window.innerWidth
+        : DESKTOP_LOGICAL_WIDTH);
+    const height =
+      deps.viewportHeight ??
+      (typeof window !== 'undefined' && window.innerHeight > 0
+        ? window.innerHeight
+        : DESKTOP_LOGICAL_HEIGHT);
     this.currentLayout = computeResponsiveLayout(width, height);
   }
 
@@ -92,6 +102,16 @@ export class NightMarketScene extends Phaser.Scene {
   }
 
   public getLayout(): ResponsiveLayoutPlan {
+    return this.currentLayout;
+  }
+
+  public resizeViewport(
+    viewportWidth: number,
+    viewportHeight: number,
+  ): ResponsiveLayoutPlan {
+    this.currentLayout = computeResponsiveLayout(viewportWidth, viewportHeight);
+    this.applyStageLayout(this.currentLayout);
+    this.ensureStageMounted();
     return this.currentLayout;
   }
 
@@ -147,13 +167,24 @@ export class NightMarketScene extends Phaser.Scene {
       this.stageContainer.className = 'nm-phaser-stage';
     }
 
-    this.stageContainer.style.position = 'absolute';
-    this.stageContainer.style.inset = '0';
-    this.stageContainer.style.width = '100%';
-    this.stageContainer.style.height = '100%';
-    this.stageContainer.style.pointerEvents = 'none';
-    this.stageContainer.style.zIndex = '1';
-    this.stageContainer.style.opacity = '1';
+    const stageStyle = this.stageContainer.style as CSSStyleDeclaration & Record<string, string>;
+    stageStyle.position = 'absolute';
+    stageStyle.inset = '0';
+    stageStyle.width = '100%';
+    stageStyle.height = '100%';
+    stageStyle.pointerEvents = 'none';
+    stageStyle.zIndex = '1';
+    stageStyle.opacity = '1';
+    stageStyle.display = 'block';
+    if (typeof stageStyle.setProperty === 'function') {
+      stageStyle.setProperty('display', 'block', 'important');
+    }
+
+    if (this.stageContainer.dataset) {
+      this.stageContainer.dataset.orientation = this.currentLayout.orientation;
+      this.stageContainer.dataset.logicalWidth = String(this.currentLayout.logicalWidth);
+      this.stageContainer.dataset.logicalHeight = String(this.currentLayout.logicalHeight);
+    }
 
     const gameCanvas =
       (this as unknown as { game?: { canvas?: HTMLCanvasElement | null } }).game?.canvas ??
@@ -174,10 +205,24 @@ export class NightMarketScene extends Phaser.Scene {
       ) {
         this.stageContainer.appendChild(canvasEl);
       }
+      if ('width' in canvasEl && canvasEl.width !== this.currentLayout.logicalWidth) {
+        canvasEl.width = this.currentLayout.logicalWidth;
+      }
+      if ('height' in canvasEl && canvasEl.height !== this.currentLayout.logicalHeight) {
+        canvasEl.height = this.currentLayout.logicalHeight;
+      }
+      if (canvasEl.dataset) {
+        canvasEl.dataset.orientation = this.currentLayout.orientation;
+        canvasEl.dataset.logicalWidth = String(this.currentLayout.logicalWidth);
+        canvasEl.dataset.logicalHeight = String(this.currentLayout.logicalHeight);
+      }
       if (canvasEl.style) {
         canvasEl.style.display = 'block';
         canvasEl.style.width = '100%';
         canvasEl.style.height = '100%';
+        canvasEl.style.objectFit = 'cover';
+        canvasEl.style.objectPosition =
+          this.currentLayout.orientation === 'portrait' ? 'center 44%' : 'center bottom';
       }
     }
 
@@ -193,6 +238,9 @@ export class NightMarketScene extends Phaser.Scene {
       const sceneArt = sceneEl.querySelector<HTMLElement>('.nm-scene-art');
       if (sceneArt) {
         sceneArt.style.opacity = '0';
+        if (typeof sceneArt.style.setProperty === 'function') {
+          sceneArt.style.setProperty('opacity', '0', 'important');
+        }
       }
       const customerList = sceneEl.querySelector<HTMLElement>('.nm-customer-list');
       if (customerList) {
@@ -204,40 +252,44 @@ export class NightMarketScene extends Phaser.Scene {
       const customerImgs = sceneEl.querySelectorAll<HTMLElement>('.nm-customer img');
       customerImgs.forEach((img) => {
         img.style.opacity = '0';
+        if (typeof img.style.setProperty === 'function') {
+          img.style.setProperty('opacity', '0', 'important');
+        }
       });
     }
   }
 
   private createStageObjects(): void {
     const { assets } = this.deps;
+    const { stageLayout } = this.currentLayout;
 
     this.backgroundSprite = setManifestOrigin(
-      this.add.image(640, 360, 'night_market'),
+      this.add.image(stageLayout.background.x, stageLayout.background.y, 'night_market'),
       assets,
       'night_market',
     );
 
     this.stallSprite = setManifestOrigin(
-      this.add.image(640, 620, 'stall'),
+      this.add.image(stageLayout.stall.x, stageLayout.stall.y, 'stall'),
       assets,
       'stall',
     );
 
     this.bossSprite = setManifestOrigin(
-      this.add.image(520, 610, 'boss'),
+      this.add.image(stageLayout.boss.x, stageLayout.boss.y, 'boss'),
       assets,
       'boss',
     );
 
     this.previewDrinkSprite = setManifestOrigin(
-      this.add.image(640, 650, 'cup'),
+      this.add.image(stageLayout.previewDrink.x, stageLayout.previewDrink.y, 'cup'),
       assets,
       'cup',
     );
 
-    this.customerSlots = [0, 1, 2].map(() => {
+    this.customerSlots = stageLayout.customerSlots.map((slotPos) => {
       const sprite = setManifestOrigin(
-        this.add.image(800, 600, 'customer_1_happy'),
+        this.add.image(slotPos.x, slotPos.y, 'customer_1_happy'),
         assets,
         'customer_1_happy',
       );
@@ -250,8 +302,9 @@ export class NightMarketScene extends Phaser.Scene {
   }
 
   private applyStageLayout(layout: ResponsiveLayoutPlan): void {
-    const stageWidth = DESKTOP_LOGICAL_WIDTH;
-    const stageHeight = DESKTOP_LOGICAL_HEIGHT;
+    const stageWidth = layout.logicalWidth;
+    const stageHeight = layout.logicalHeight;
+    const { stageLayout } = layout;
 
     if (this.scale && typeof this.scale.resize === 'function') {
       if (this.scale.width !== stageWidth || this.scale.height !== stageHeight) {
@@ -263,34 +316,62 @@ export class NightMarketScene extends Phaser.Scene {
       }
     }
 
-    if (this.backgroundSprite) {
-      this.backgroundSprite.setPosition(stageWidth * 0.5, stageHeight * 0.5);
-      this.backgroundSprite.setScale(1);
+    const mainCamera = (
+      this as unknown as {
+        cameras?: {
+          main?: {
+            setSize?: (w: number, h: number) => unknown;
+            setViewport?: (x: number, y: number, w: number, h: number) => unknown;
+            setBounds?: (x: number, y: number, w: number, h: number) => unknown;
+            centerOn?: (x: number, y: number) => unknown;
+          };
+        };
+      }
+    ).cameras?.main;
+
+    if (mainCamera) {
+      try {
+        mainCamera.setSize?.(stageWidth, stageHeight);
+        mainCamera.setViewport?.(
+          stageLayout.camera.viewportX,
+          stageLayout.camera.viewportY,
+          stageLayout.camera.viewportWidth,
+          stageLayout.camera.viewportHeight,
+        );
+        mainCamera.setBounds?.(0, 0, stageWidth, stageHeight);
+        mainCamera.centerOn?.(stageLayout.camera.centerX, stageLayout.camera.centerY);
+      } catch {
+        // 忽略部分無頭環境相機設定例外
+      }
     }
 
-    const sceneBottomY = stageHeight - 12;
-    const stallCenterX = stageWidth * 0.42;
+    if (this.backgroundSprite) {
+      this.backgroundSprite.setPosition(stageLayout.background.x, stageLayout.background.y);
+      this.backgroundSprite.setScale(stageLayout.background.scale);
+    }
 
     if (this.stallSprite) {
-      this.stallSprite.setPosition(stallCenterX, sceneBottomY);
-      this.stallSprite.setScale(layout.orientation === 'portrait' ? 0.58 : 0.64);
+      this.stallSprite.setPosition(stageLayout.stall.x, stageLayout.stall.y);
+      this.stallSprite.setScale(stageLayout.stall.scale);
     }
 
     if (this.bossSprite) {
-      this.bossSprite.setPosition(stageWidth * 0.34, sceneBottomY - 14);
-      this.bossSprite.setScale(layout.orientation === 'portrait' ? 0.38 : 0.44);
+      this.bossSprite.setPosition(stageLayout.boss.x, stageLayout.boss.y);
+      this.bossSprite.setScale(stageLayout.boss.scale);
     }
 
     if (this.previewDrinkSprite) {
-      this.previewDrinkSprite.setPosition(stallCenterX + 76, sceneBottomY - 190);
-      this.previewDrinkSprite.setScale(0.28);
+      this.previewDrinkSprite.setPosition(
+        stageLayout.previewDrink.x,
+        stageLayout.previewDrink.y,
+      );
+      this.previewDrinkSprite.setScale(stageLayout.previewDrink.scale);
     }
 
     this.customerSlots.forEach((slot, idx) => {
-      const baseRightX = stageWidth * 0.64;
-      const stepX = layout.orientation === 'portrait' ? 140 : 164;
-      slot.sprite.setPosition(baseRightX + idx * stepX, sceneBottomY - 8);
-      slot.sprite.setScale(layout.orientation === 'portrait' ? 0.42 : 0.48);
+      const placement = stageLayout.customerSlots[idx] ?? stageLayout.customerSlots[0];
+      slot.sprite.setPosition(placement.x, placement.y);
+      slot.sprite.setScale(placement.scale);
     });
   }
 
@@ -493,8 +574,7 @@ export class NightMarketScene extends Phaser.Scene {
       return;
     }
     const onResize = (): void => {
-      this.currentLayout = computeResponsiveLayout(window.innerWidth, window.innerHeight);
-      this.applyStageLayout(this.currentLayout);
+      this.resizeViewport(window.innerWidth, window.innerHeight);
     };
     window.addEventListener('resize', onResize);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

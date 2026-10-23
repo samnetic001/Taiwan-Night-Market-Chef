@@ -33,6 +33,8 @@ export interface LaunchNightMarketGameOptions {
   readonly now?: () => number;
   readonly createPhaserInstance?: boolean;
   readonly tickIntervalMs?: number;
+  readonly viewportWidth?: number;
+  readonly viewportHeight?: number;
 }
 
 export interface RunningNightMarketGame {
@@ -67,6 +69,68 @@ function attachHeadlessSceneLifecycle(
   assets: AssetRegistry,
 ): void {
   const loadedKeys = new Set<string>();
+  const initialLayout = scene.getLayout();
+  (scene as unknown as { scale: { width: number; height: number; resize: (w: number, h: number) => void } }).scale = {
+    width: initialLayout.logicalWidth,
+    height: initialLayout.logicalHeight,
+    resize(w: number, h: number) {
+      this.width = w;
+      this.height = h;
+    },
+  };
+  (
+    scene as unknown as {
+      cameras: {
+        main: {
+          width: number;
+          height: number;
+          viewportX: number;
+          viewportY: number;
+          boundsWidth: number;
+          boundsHeight: number;
+          centerX: number;
+          centerY: number;
+          setSize: (w: number, h: number) => unknown;
+          setViewport: (x: number, y: number, w: number, h: number) => unknown;
+          setBounds: (x: number, y: number, w: number, h: number) => unknown;
+          centerOn: (x: number, y: number) => unknown;
+        };
+      };
+    }
+  ).cameras = {
+    main: {
+      width: initialLayout.logicalWidth,
+      height: initialLayout.logicalHeight,
+      viewportX: 0,
+      viewportY: 0,
+      boundsWidth: initialLayout.logicalWidth,
+      boundsHeight: initialLayout.logicalHeight,
+      centerX: initialLayout.stageLayout.camera.centerX,
+      centerY: initialLayout.stageLayout.camera.centerY,
+      setSize(w: number, h: number) {
+        this.width = w;
+        this.height = h;
+        return this;
+      },
+      setViewport(x: number, y: number, w: number, h: number) {
+        this.viewportX = x;
+        this.viewportY = y;
+        this.width = w;
+        this.height = h;
+        return this;
+      },
+      setBounds(_x: number, _y: number, w: number, h: number) {
+        this.boundsWidth = w;
+        this.boundsHeight = h;
+        return this;
+      },
+      centerOn(x: number, y: number) {
+        this.centerX = x;
+        this.centerY = y;
+        return this;
+      },
+    },
+  };
   (scene as unknown as { load: { image: (key: string, url: string) => void } }).load = {
     image(key: string) {
       loadedKeys.add(key);
@@ -146,11 +210,25 @@ export async function launchNightMarketGame(
     now: options.now,
   });
 
+  const viewportWidth =
+    options.viewportWidth ??
+    (typeof window !== 'undefined' && window.innerWidth > 0
+      ? window.innerWidth
+      : DESKTOP_LOGICAL_WIDTH);
+  const viewportHeight =
+    options.viewportHeight ??
+    (typeof window !== 'undefined' && window.innerHeight > 0
+      ? window.innerHeight
+      : DESKTOP_LOGICAL_HEIGHT);
+  const layout = computeResponsiveLayout(viewportWidth, viewportHeight);
+
   const scene = new NightMarketScene({
     host,
     assets,
     session,
     now: options.now,
+    viewportWidth,
+    viewportHeight,
   });
 
   const shouldUsePhaser = options.createPhaserInstance ?? canCreatePhaserCanvas();
@@ -171,16 +249,11 @@ export async function launchNightMarketGame(
     stageContainer.style.opacity = '1';
     scene.attachStageContainer(stageContainer);
 
-    const layout = computeResponsiveLayout(
-      typeof window !== 'undefined' ? window.innerWidth : DESKTOP_LOGICAL_WIDTH,
-      typeof window !== 'undefined' ? window.innerHeight : DESKTOP_LOGICAL_HEIGHT,
-    );
-
     phaserGame = new Phaser.Game({
       type: Phaser.AUTO,
       parent: stageContainer,
-      width: DESKTOP_LOGICAL_WIDTH,
-      height: DESKTOP_LOGICAL_HEIGHT,
+      width: layout.logicalWidth,
+      height: layout.logicalHeight,
       backgroundColor: '#ffe7bb',
       scene: [scene],
       scale: {
@@ -193,9 +266,8 @@ export async function launchNightMarketGame(
       banner: false,
     });
 
-    if (layout) {
-      scene.ensureStageMounted();
-    }
+    scene.resizeViewport(viewportWidth, viewportHeight);
+    scene.ensureStageMounted();
   } else {
     attachHeadlessSceneLifecycle(scene, assets);
   }
