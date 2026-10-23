@@ -176,7 +176,7 @@ export function mountGameUi(options: GameUiOptions): GameUi {
         <button class="nm-quiet" data-action="audio" aria-label="${audioEnabled ? '關閉音效' : '開啟音效'}">音效${audioEnabled ? '開' : '關'}</button>
       </header>
       <main class="nm-play">
-        <section class="nm-orders" aria-label="客人訂單"><h2>客人訂單 <span>${orders.length}/3</span><small class="nm-order-hint">左右滑動查看</small></h2><div class="nm-order-list">${orderCards}</div></section>
+        <section class="nm-orders" aria-label="客人訂單"><h2>客人訂單 <span>${orders.length}/3</span></h2><div class="nm-order-list">${orderCards}</div></section>
         <section class="nm-scene" aria-label="夜市攤位與客人"><div class="nm-scene-art">${image(assets, 'stall', 'nm-stall')}${image(assets, 'boss', 'nm-boss')}</div><div class="nm-customer-list">${customers || '<span class="nm-awaiting">準備迎接客人！</span>'}</div></section>
         <section class="nm-workbench" aria-label="珍珠奶茶工作台">
           <div class="nm-workbench-head"><h2>調飲工作台</h2><span>${workbench.isFinished ? '飲料完成・選擇客人交付' : '依訂單選材、封膜出杯'}</span></div>

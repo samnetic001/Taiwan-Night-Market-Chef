@@ -66,7 +66,7 @@ button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
 .nm-assembly span { overflow: hidden; color: #815938; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .nm-finish { min-width: 104px; }
 .nm-feedback { min-height: 20px; margin: 6px 0 0; color: #b24931; font-weight: 800; }
-.nm-overlay { position: absolute; z-index: 4; inset: 0; display: grid; place-items: center; padding: 20px; background: #422718ad; backdrop-filter: blur(4px); }
+.nm-overlay { position: fixed; z-index: 4; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); background: #422718ad; backdrop-filter: blur(4px); }
 .nm-overlay-card { width: min(100%, 560px); padding: 24px; border: 4px solid #e7a157; border-radius: 30px; background: #fff7e5; box-shadow: 0 12px 0 #a6643c, 0 30px 60px #29171080; text-align: center; }
 .nm-overlay-card h1 { margin: 7px 0; color: var(--teal); font-size: clamp(2rem, 5vw, 3.3rem); line-height: 1.15; }
 .nm-overlay-card p { color: #805538; font-weight: 700; }
@@ -123,16 +123,26 @@ button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
 }
 
 @media (max-width: 620px) and (orientation: portrait) {
-  .nm-order-hint { display: inline; margin-left: 8px; color: #8b6241; font-size: .72rem; }
-  .nm-order-list { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 9px; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; }
-  .nm-order { flex: 0 0 min(82vw, 310px); min-height: 148px; padding: 11px; scroll-snap-align: start; }
-  .nm-order-top { flex-wrap: nowrap; font-size: .9rem; }
-  .nm-order-title { font-size: 1.12rem; }
-  .nm-order-tags { gap: 5px; }
-  .nm-order-tags span { padding: 3px 8px; font-size: .78rem; }
-  .nm-deliver { min-height: 48px; padding: 7px 10px; font-size: .95rem; }
+  .nm-order-list { display: grid; grid-template-columns: 1fr; gap: 7px; overflow: visible; padding: 0; }
+  .nm-order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 38%); align-items: center; gap: 2px 8px; min-height: 0; padding: 7px 9px; }
+  .nm-order-top { grid-column: 1 / -1; flex-wrap: nowrap; font-size: .82rem; }
+  .nm-order-title { grid-column: 1; margin: 0; font-size: 1rem; }
+  .nm-order-tags { grid-column: 1; gap: 3px; }
+  .nm-order-tags span { padding: 2px 5px; font-size: .7rem; }
+  .nm-wait-track { grid-column: 1; margin: 3px 0; }
+  .nm-deliver { grid-column: 2; grid-row: 2 / 5; min-height: 48px; padding: 6px; font-size: .88rem; }
+  .nm-order-empty { display: grid; grid-template-columns: 1fr; min-height: 52px; }
+  .nm-order-empty span { grid-column: 1; }
   .nm-scene { min-height: 160px; height: 23vh; }
   .nm-workbench { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
   .nm-choice { min-width: 48px; min-height: 52px; }
   .nm-assembly .nm-quiet { min-height: 48px; }
+  .nm-assembly span { overflow: visible; text-overflow: clip; white-space: normal; }
+}
+
+@media (orientation: portrait) {
+  /* The Phaser scene still uses a 1280x720 canvas. Show its manifest-backed DOM art
+     until the scene implements a portrait camera and sprite layout. */
+  .nm-scene .nm-phaser-stage { display: none !important; }
+  .nm-scene .nm-scene-art, .nm-scene .nm-customer img { opacity: 1 !important; }
 }
