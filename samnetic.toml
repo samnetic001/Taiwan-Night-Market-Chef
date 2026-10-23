@@ -3,7 +3,7 @@ discussion_rounds = 3
 repair_attempts = 1
 concurrent_agents = 2
 agent_timeout_seconds = 900
-max_invocations = 6
+max_invocations = 24
 run_timeout_seconds = 5400
 
 [agents]
@@ -16,4 +16,4 @@ codex_reasoning_effort = "medium"
 antigravity = "gemini-4-argon-medium"
 
 [validation]
-commands = [["git", "diff", "--check"]]
+commands = [["git", "diff", "--check"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "scripts/verify-assets.mjs"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "node_modules/vitest/vitest.mjs", "run", "--passWithNoTests"]]

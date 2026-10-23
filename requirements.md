@@ -21,3 +21,11 @@ Codex CLI 使用 gpt-6-sol、model_reasoning_effort=medium；Antigravity CLI 使
 ## 驗收與交付
 
 首頁可見並可開始；客人及訂單自動出現；所有飲料步驟可操作；正確與錯誤判定不同；計時、金幣、分數、結算、重玩正常；正式圖片能載入；桌面及手機基本互動可用。交付原始碼、Asset Manifest、架構、ADR、分工及審查紀錄、測試報告、啟動方式、模型與使用量紀錄、後續關卡規劃。
+
+## 已核准架構細則
+
+交付事件以實際時間戳和訂單期限比較，事件時間晚於期限一律視為逾時；手機直式需重排訂單、客人與操作區，觸控目標至少 48 CSS px。完整依 docs/architecture.md 與 docs/asset-contract.md。
+
+## 已提供素材與開發分工
+
+Codex GUI 已產出 21 張正式 PNG 與 manifest，來源見 docs/asset-sources.md；不可再把 Codex CLI 的文字提示冒充圖片生成。Codex CLI 應負責視覺整合、Asset Contract 檢查、UI 樣式與資源載入；Antigravity CLI 應負責 TypeScript 純函式核心、Phaser 場景與自動化測試。兩位代理必須互審對方實際變更。
