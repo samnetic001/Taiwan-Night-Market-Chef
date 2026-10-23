@@ -60,3 +60,14 @@
 2. **【建議修正】放寬直式單欄訂單列表的媒體查詢寬度上限以涵蓋 `720×1280` 直式視窗**：
    - **檔案與位置**：[`src/styles/game.css`](file:///Users/samlin/Projects/Taiwan-Night-Market-Chef/.samnetic/worktrees/1f08fc28-0a25-4b7f-a0bb-b39c19a238a5/T6/src/styles/game.css#L87-L135) 第 87–106 行與第 125–135 行。
    - **原因**：目前單欄縱列訂單僅在 `@media (max-width: 620px) and (orientation: portrait)` 生效；當視窗為 `720×1280` 直式時，會落入第 87 行 `@media (max-width: 780px), (orientation: portrait)` 的三欄窄卡（`.nm-order-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }`）。建議將直式單欄訂單或寬裕字級／內距涵蓋至 `(orientation: portrait)`（或 `max-width: 780px` 直式），使 `390×844` 與 `720×1280` 兩種直式目標視窗表現一致。
+
+## T7 Codex 處理回覆（2026-10-23）
+
+| T6 意見 | 本工作樹處理 | 狀態與剩餘驗證 |
+|---|---|---|
+| 必修正：移除直式隱藏 Phaser 規則 | 已從 `src/styles/game.css` 刪除該 `@media` 區塊；場景現由 `ensureStageMounted()` 掛載畫布並隱藏重複的 DOM 圖像。 | 程式靜態核對已處理；待 Antigravity 再審及真實直式瀏覽器驗證。 |
+| 建議修正：720×1280 直式訂單維持單欄 | 已將單欄規則改為 `@media (orientation: portrait)`，涵蓋 390×844 與 720×1280。 | 樣式靜態核對已處理；待實際寬高、換行與觸控尺寸量測。 |
+
+上方 T6 的「通過」與 16/16 測試結果是該階段紀錄。本回覆不代表 Antigravity 已複驗，也不代表本工作樹已重新執行測試。
+
+本樹再次靜態核對兩項 CSS 處置與 21 張 PNG 標頭，詳見 `docs/t7-verification.md`。前次任務輸入另有 `tests_passed: false`、`test_failure: null`，因此 T7 的測試與互審狀態仍列為待驗證；不能以 T6 成績或這次靜態核對代替 Antigravity 再審。

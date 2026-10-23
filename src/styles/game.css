@@ -122,7 +122,7 @@ button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
   .nm-choice img { width: 26px; height: 26px; }
 }
 
-@media (max-width: 620px) and (orientation: portrait) {
+@media (orientation: portrait) {
   .nm-order-list { display: grid; grid-template-columns: 1fr; gap: 7px; overflow: visible; padding: 0; }
   .nm-order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 38%); align-items: center; gap: 2px 8px; min-height: 0; padding: 7px 9px; }
   .nm-order-top { grid-column: 1 / -1; flex-wrap: nowrap; font-size: .82rem; }
@@ -138,11 +138,4 @@ button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
   .nm-choice { min-width: 48px; min-height: 52px; }
   .nm-assembly .nm-quiet { min-height: 48px; }
   .nm-assembly span { overflow: visible; text-overflow: clip; white-space: normal; }
-}
-
-@media (orientation: portrait) {
-  /* The Phaser scene still uses a 1280x720 canvas. Show its manifest-backed DOM art
-     until the scene implements a portrait camera and sprite layout. */
-  .nm-scene .nm-phaser-stage { display: none !important; }
-  .nm-scene .nm-scene-art, .nm-scene .nm-customer img { opacity: 1 !important; }
 }
