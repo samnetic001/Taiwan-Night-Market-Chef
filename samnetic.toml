@@ -16,4 +16,4 @@ codex_reasoning_effort = "medium"
 antigravity = "gemini-4-argon-medium"
 
 [validation]
-commands = [["git", "diff", "--check"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "scripts/verify-assets.mjs"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "node_modules/vitest/vitest.mjs", "run", "--passWithNoTests"]]
+commands = [["git", "diff", "--check"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "scripts/verify-assets.mjs"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "node_modules/vitest/vitest.mjs", "run", "--passWithNoTests"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "node_modules/typescript/bin/tsc", "--noEmit"], ["/Users/samlin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node", "node_modules/vite/bin/vite.js", "build"]]
