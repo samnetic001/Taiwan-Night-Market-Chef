@@ -1,0 +1,5 @@
+node_modules/
+dist/
+coverage/
+.samnetic/
+.DS_Store

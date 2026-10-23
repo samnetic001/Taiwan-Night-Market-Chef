@@ -1,0 +1,19 @@
+[limits]
+discussion_rounds = 3
+repair_attempts = 1
+concurrent_agents = 2
+agent_timeout_seconds = 900
+max_invocations = 6
+run_timeout_seconds = 5400
+
+[agents]
+codex = "/opt/homebrew/bin/codex"
+antigravity = "/Users/samlin/.local/bin/agy"
+
+[models]
+codex = "gpt-6-sol"
+codex_reasoning_effort = "medium"
+antigravity = "gemini-4-argon-medium"
+
+[validation]
+commands = [["git", "diff", "--check"]]
